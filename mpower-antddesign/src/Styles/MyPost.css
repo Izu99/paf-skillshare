@@ -1,0 +1,78 @@
+/* ../Styles/MyPost.css */
+
+.mypost-container {
+  background: #ffffff;
+  color: #333;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  cursor: pointer;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.mypost-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(to right, #4e7df7, #5e6ee3);
+}
+
+.post-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.post-icon {
+  color: #4e7df7;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(78, 125, 247, 0.1);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+}
+
+.post-text {
+  flex: 1;
+}
+
+.post-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.post-description {
+  font-size: 14px;
+  color: #666;
+}
+
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(78, 125, 247, 0.05);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mypost-container:hover .hover-overlay {
+  opacity: 1;
+}

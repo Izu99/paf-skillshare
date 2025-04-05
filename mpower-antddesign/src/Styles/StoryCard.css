@@ -1,0 +1,126 @@
+/* ../Styles/StoryCard.css */
+
+.story_card {
+  position: relative;
+  min-width: 120px;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-right: 12px;
+}
+
+.story_card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Main story image */
+.story_card > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Gradient overlay */
+.story_card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  z-index: 1;
+}
+
+/* Profile image container */
+.story_profile {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+/* Profile image */
+.story_profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #4e7df7;
+  object-fit: cover;
+  background-color: #f0f0f0;
+}
+
+/* Profile image placeholder */
+.story_profile .placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #4e7df7;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #4e7df7;
+  font-size: 16px;
+}
+
+/* Active status circle indicator */
+.story_profile .circle {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  border: 2px solid white;
+}
+
+/* User name container */
+.story_name {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+/* User name text */
+.story_name .name {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Placeholder for main story image */
+.story_image_placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
