@@ -17,7 +17,7 @@ const Navbar = () => {
 
       <div class="right">
         <NotificationsDropdown />
-        <im
+        <img
           onClick={() => {
             state.profileModalOpend = true;
           }}

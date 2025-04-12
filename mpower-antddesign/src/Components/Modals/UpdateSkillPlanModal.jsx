@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Button, Select, DatePicker, Checkbox } from "antd";
+import { Modal, Form, Input, Button, Select, DatePicker, Checkbox, message } from "antd";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
 import SkillPlanService from "../../Services/SkillPlanService";
@@ -13,43 +13,77 @@ const UpdateSkillPlanModal = () => {
   const [updateSkillPlanLoading, setUpdateSkillPlanLoading] = useState(false);
   const [form] = Form.useForm();
 
-  const updatePlan = async (values) => {
-    try {
-      setUpdateSkillPlanLoading(true);
-      await SkillPlanService.updateSkillPlan(selectedSkillPlan.id, {
-        ...values,
-        userId: snap.currentUser.uid,
-        date: values.date.format("YYYY-MM-DD"),
-        isFinished: values.isFinished || false,
-      });
-      state.skillPlans = await SkillPlanService.getAllSkillPlans();
-      state.updateSkillPlanOpened = false;
-    } catch (error) {
-      console.error("Error updating skill plan:", error);
-    } finally {
-      setUpdateSkillPlanLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (selectedSkillPlan) {
+      // Check both isFinished and finished properties to handle any backend inconsistency
+      const isCompleted = 
+        selectedSkillPlan.isFinished === true || 
+        selectedSkillPlan.isFinished === "true" ||
+        selectedSkillPlan.finished === true || 
+        selectedSkillPlan.finished === "true";
+      
       form.setFieldsValue({
         skillDetails: selectedSkillPlan.skillDetails,
         skillLevel: selectedSkillPlan.skillLevel,
         resources: selectedSkillPlan.resources,
         date: selectedSkillPlan.date ? dayjs(selectedSkillPlan.date) : null,
-        isFinished: selectedSkillPlan.isFinished,
+        isFinished: isCompleted,
       });
     }
   }, [form, selectedSkillPlan]);
 
+  const updatePlan = async (values) => {
+    try {
+      setUpdateSkillPlanLoading(true);
+      
+      // Create the updated plan - explicitly set both fields to match backend expectations
+      const updatedPlan = {
+        ...values,
+        userId: snap.currentUser.uid,
+        date: values.date.format("YYYY-MM-DD"),
+        isFinished: Boolean(values.isFinished),
+        finished: Boolean(values.isFinished) // Add this field to ensure backend compatibility
+      };
+      
+      await SkillPlanService.updateSkillPlan(selectedSkillPlan.id, updatedPlan);
+      
+      // Update the local state immediately for better UX
+      const updatedPlans = snap.skillPlans.map(plan => 
+        plan.id === selectedSkillPlan.id 
+          ? { 
+              ...plan, 
+              ...updatedPlan, 
+              id: selectedSkillPlan.id,
+              // Ensure both fields are set in the local state
+              isFinished: Boolean(values.isFinished),
+              finished: Boolean(values.isFinished)
+            } 
+          : plan
+      );
+      state.skillPlans = updatedPlans;
+      
+      // Refresh from server to ensure consistency
+      const refreshedPlans = await SkillPlanService.getAllSkillPlans();
+      state.skillPlans = refreshedPlans;
+      
+      message.success("Skill plan updated successfully");
+      state.updateSkillPlanOpened = false;
+    } catch (error) {
+      console.error("Error updating skill plan:", error);
+      message.error("Failed to update skill plan");
+    } finally {
+      setUpdateSkillPlanLoading(false);
+    }
+  };
+
   return (
     <Modal
+      title="Update Skill Plan"
+      open={snap.updateSkillPlanOpened}
       footer={null}
       onCancel={() => {
         state.updateSkillPlanOpened = false;
       }}
-      open={snap.updateSkillPlanOpened}
     >
       <Form
         form={form}
@@ -63,6 +97,7 @@ const UpdateSkillPlanModal = () => {
         >
           <Input.TextArea />
         </Form.Item>
+        
         <Form.Item
           name="skillLevel"
           label="Skill Level"
@@ -74,6 +109,7 @@ const UpdateSkillPlanModal = () => {
             <Option value="advanced">Advanced</Option>
           </Select>
         </Form.Item>
+        
         <Form.Item
           name="resources"
           label="Resources"
@@ -81,6 +117,7 @@ const UpdateSkillPlanModal = () => {
         >
           <Input.TextArea />
         </Form.Item>
+        
         <Form.Item
           name="date"
           label="Scheduled Date"
@@ -88,6 +125,7 @@ const UpdateSkillPlanModal = () => {
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
+        
         <Form.Item
           name="isFinished"
           valuePropName="checked"
@@ -95,11 +133,13 @@ const UpdateSkillPlanModal = () => {
         >
           <Checkbox />
         </Form.Item>
+        
         <Form.Item>
           <Button
             type="primary"
             htmlType="submit"
             loading={updateSkillPlanLoading}
+            block
           >
             Update Skill Plan
           </Button>

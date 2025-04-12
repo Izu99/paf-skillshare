@@ -1,18 +1,38 @@
-import "antd/dist/reset.css";
-import "./App.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./Views/Home";
-import Community from "./Views/Community";
+// App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Home from './Views/Home';
+import Community from './Views/Community';
+import OAuthCallback from './Components/Home/OAuthCallbackHandler'; // Import your OAuthCallback component
 
-function App() {
+// ProtectedRoute to check if the user is authenticated
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('userId') && localStorage.getItem('accessToken');
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
+const App = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/community" element={<Community />} />
+        {/* Add the OAuth callback route here */}
+        <Route path="/oauth2/callback" element={<OAuthCallback />} />
+        {/* Protected route for /community */}
+        <Route 
+          path="/community" 
+          element={
+            <ProtectedRoute>
+              <Community />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
-}
+};
 
 export default App;

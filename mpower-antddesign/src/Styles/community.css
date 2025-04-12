@@ -1,58 +1,59 @@
-/* ../Styles/CommentCard.css */
-
-.comment-item {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
-}
-
-.comment-item:hover {
-  transform: translateY(-2px);
-}
-
-.comment-container {
+.main {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 16px;
-  width: 100%;
+  overflow: hidden; /* Ensure bubbles don't cause scroll */
+  position: relative; /* Needed for absolute positioning of bubbles */
 }
 
-.comment-avatar {
-  cursor: pointer;
-  transition: transform 0.2s ease;
+/* Bubble animations */
+@keyframes moveBubbles {
+  0% {
+    bottom: -100px;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    bottom: 110%;
+    transform: scale(0);
+  }
 }
 
-.comment-avatar:hover {
-  transform: scale(1.05);
+/* Bubble common styles */
+.bubble {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  position: absolute;
+  bottom: -100px; /* Start off screen */
+  opacity: 0.5;
+  animation: moveBubbles 15s infinite ease-in;
 }
 
-.comment-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* Bubble size and animation delay variations */
+.bubble:nth-child(1) {
+  width: 40px;
+  height: 40px;
+  left: 20%;
+  animation-delay: 0s;
+}
+.bubble:nth-child(2) {
+  width: 60px;
+  height: 60px;
+  left: 40%;
+  animation-delay: 2s;
 }
 
-.comment-user {
-  font-size: 14px;
-  font-weight: 600;
-  color: #4e7df7;
-  margin-bottom: 4px;
+
+.bubble:nth-child(3) {
+  width: 30px;
+  height: 30px;
+  left: 60%;
+  animation-delay: 4s;
+}
+.bubble:nth-child(4) {
+  width: 50px;
+  height: 50px;
+  left: 80%;
+  animation-delay: 6s;
 }
 
-.comment-text {
-  font-size: 15px;
-  color: #333;
-  margin: 0;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.comment-time {
-  font-size: 12px;
-  color: #999;
-  margin-top: 6px;
-}

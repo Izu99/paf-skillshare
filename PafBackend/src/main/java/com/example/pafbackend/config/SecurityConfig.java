@@ -1,5 +1,6 @@
 package com.example.pafbackend.config;
 
+import com.example.pafbackend.services.CustomOAuth2UserService;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -19,7 +20,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -32,7 +32,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -53,53 +53,65 @@ public class SecurityConfig {
     @Autowired
     KeyUtils keyUtils;
 
-
     @Autowired
     UserDetailsManager userDetailsManager;
+    
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-        return  http
-                .cors(cors->cors.configurationSource(corsConfiguration()))
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
-                      auth.requestMatchers( "/api/auth/register","/api/auth/login","/api/users/**").permitAll();
-                  auth.anyRequest().authenticated();
+                    auth.requestMatchers("/api/auth/register", "/api/auth/login", "/api/users/**", 
+                            "/", "/api/user", "/api/logout", "/error", "/oauth2/authorization/**", 
+                            "/login/oauth2/code/**").permitAll();
+                    auth.anyRequest().authenticated();
                 })
-
-                .oauth2ResourceServer
-                        ((oauth2)->oauth2.jwt((jwt)->jwt.jwtAuthenticationConverter(jwtToUserConverter)))
-                .sessionManagement((session)->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
+                        .successHandler(oAuth2LoginSuccessHandler))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtToUserConverter)))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .logout(logout -> logout
+                        .logoutUrl("/api/logout")
+                        .logoutSuccessUrl("http://localhost:3000")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true))
                 .build();
     }
+
     @Bean
-    CorsConfigurationSource corsConfiguration(){
+    CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000"));
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**",corsConfiguration);
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
         return urlBasedCorsConfigurationSource;
     }
 
-
     @Bean
     @Primary
-    JwtDecoder jwtAccessTokenDecoder(){
+    JwtDecoder jwtAccessTokenDecoder() {
         return NimbusJwtDecoder.withPublicKey(keyUtils.getAccessTokenPublicKey()).build();
     }
 
     @Bean
     @Primary
-    JwtEncoder jwtAccessTokenEncoder(){
+    JwtEncoder jwtAccessTokenEncoder() {
         JWK jwk = new RSAKey.Builder(keyUtils.getAccessTokenPublicKey()).privateKey(keyUtils.getAccessTokenPrivateKey()).build();
-
         JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
-        return  new NimbusJwtEncoder(jwkSource);
+        return new NimbusJwtEncoder(jwkSource);
     }
+
     @Bean
     @Qualifier("jwtRefreshTokenDecoder")
     JwtDecoder jwtRefreshTokenDecoder() {

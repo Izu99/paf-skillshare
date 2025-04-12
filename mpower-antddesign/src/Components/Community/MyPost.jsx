@@ -19,7 +19,6 @@ const MyPost = () => {
           <i className="fas fa-edit"></i>
         </div>
         <div className="post-text">
-          <div className="post-title">Share your workout</div>
           <div className="post-description">Create a new post to share with the community</div>
         </div>
       </div>

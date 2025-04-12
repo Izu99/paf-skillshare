@@ -8,11 +8,9 @@ public class UserProfile {
     @Id
     private String id;
     private String userId;
-    private String biography;
-    private String fitnessGoals;
-
     private boolean profileVisibility;
-private String email;
+    private String email;
+    private String image;
 
     public String getEmail() {
         return email;
@@ -21,8 +19,6 @@ private String email;
     public void setEmail(String email) {
         this.email = email;
     }
-
-    private String image;
 
     public String getImage() {
         return image;
@@ -48,22 +44,6 @@ private String email;
         this.userId = userId;
     }
 
-    public String getBiography() {
-        return biography;
-    }
-
-    public void setBiography(String biography) {
-        this.biography = biography;
-    }
-
-    public String getFitnessGoals() {
-        return fitnessGoals;
-    }
-
-    public void setFitnessGoals(String fitnessGoals) {
-        this.fitnessGoals = fitnessGoals;
-    }
-
     public boolean isProfileVisibility() {
         return profileVisibility;
     }
@@ -72,17 +52,11 @@ private String email;
         this.profileVisibility = profileVisibility;
     }
 
-
-
     public UserProfile() {}
 
-    public UserProfile(String id, String userId, String biography, String fitnessGoals, boolean profileVisibility) {
+    public UserProfile(String id, String userId, boolean profileVisibility) {
         this.id = id;
         this.userId = userId;
-        this.biography = biography;
-        this.fitnessGoals = fitnessGoals;
         this.profileVisibility = profileVisibility;
     }
-
-    // Getters and setters...
 }

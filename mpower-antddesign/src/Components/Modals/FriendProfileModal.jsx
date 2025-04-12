@@ -5,12 +5,9 @@ import state from "../../Utils/Store";
 import axios from "axios";
 import { BASE_URL } from "../../constants";
 import FriendsPost from "../Community/FriendsPost";
-import "../../Styles/center_section.css";
-import "../../Styles/right_section.css";
+import "../../Styles/CenterSection.css";
 import "../../Styles/community.css";
-import "../../Styles/left_section.css";
-import WorkoutPlanCard from "../Community/WorkoutPlanCard";
-import MealPlanCard from "../Community/MealPlanCard";
+import "../../Styles/LeftMenu.css";
 import UserConnectionService from "../../Services/UserConnectionService";
 const { TabPane } = Tabs;
 
@@ -147,28 +144,8 @@ const FriendProfileModal = () => {
               ))}
           </Row>
         </TabPane>
-        <TabPane tab="Workout Plans" key="2">
-          <Row gutter={[16, 16]}>
-            {snap.workoutPlans
-              .filter((plan) => plan.userId === snap.selectedUserProfile?.id)
-              .map((post) => (
-                <Col key={post.id} span={6}>
-                  <WorkoutPlanCard plan={post} />
-                </Col>
-              ))}
-          </Row>
-        </TabPane>
-        <TabPane tab="Meal Plans" key="3">
-          <Row gutter={[16, 16]}>
-            {snap.MealPlans
-              .filter((plan) => plan.userId === snap.selectedUserProfile?.id)
-              .map((post) => (
-                <Col key={post.id} span={6}>
-                  <MealPlanCard plan={post} />
-                </Col>
-              ))}
-          </Row>
-        </TabPane>
+       
+       
       </Tabs>
     </Modal>
   );

@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/userProfiles")
-
 public class UserProfileController {
 
     @Autowired
@@ -46,8 +45,6 @@ public class UserProfileController {
     public ResponseEntity<UserProfile> updateUserProfile(@PathVariable String id, @RequestBody UserProfile userProfileDetails) {
         return userProfileRepository.findById(id).map(existingUserProfile -> {
             existingUserProfile.setImage(userProfileDetails.getImage());
-            existingUserProfile.setBiography(userProfileDetails.getBiography());
-            existingUserProfile.setFitnessGoals(userProfileDetails.getFitnessGoals());
             existingUserProfile.setProfileVisibility(userProfileDetails.isProfileVisibility());
             UserProfile updatedUserProfile = userProfileRepository.save(existingUserProfile);
             return ResponseEntity.ok(updatedUserProfile);

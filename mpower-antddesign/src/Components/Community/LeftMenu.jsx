@@ -36,13 +36,11 @@ const LeftMenu = () => {
           color: "white",
         }}
       >
-        Fit Physique
+        Skill Share
       </h3>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {[
-          "Posts",
-          "Workout Plans",
-          "Meal Plans",
+          "Posts",       
           "Skill Plans", // Added Skill Plans here
           "Friends",
           "Notifications",

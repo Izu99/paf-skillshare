@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Check if user is logged in when component mounts
   useEffect(() => {
@@ -19,7 +19,7 @@ const Navbar = () => {
         setScrolled(false);
       }
     };
-
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -32,15 +32,9 @@ const Navbar = () => {
     <nav className={`navbar ${scrolled ? "navbar__scrolled" : ""}`}>
       <div className="nav__container">
         <div className="nav__header">
-          <div className="nav__logo">
-            <Link to="/">
-              <span className="logo__text">MealShare</span>
-            </Link>
-          </div>
-          
-          <div className="nav__search">
+                <div className="nav__search">
             <form>
-              <input type="text" placeholder="Search for meals, courses..." />
+              <input type="text" placeholder="Search for skills, courses..." />
               <button type="submit" className="search__button">
                 <i className="fas fa-search"></i>
               </button>
@@ -69,11 +63,10 @@ const Navbar = () => {
           <li className="nav__item">
             <Link to="/community" className="nav__link">Community</Link>
           </li>
-
-          {/* Conditionally render "Join Now" or "Profile/Community" based on login state */}
+          
           <li className="nav__item nav__item--cta">
             {isLoggedIn ? (
-              <Link to="/profile" className="nav__link nav__link--cta">Profile</Link> // Change to "Profile" or "Community" based on preference
+              <Link to="/profile" className="nav__link nav__link--cta">Profile</Link>
             ) : (
               <Link to="/get-started" className="nav__link nav__link--cta">Login</Link>
             )}

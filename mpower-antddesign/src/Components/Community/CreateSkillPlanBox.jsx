@@ -1,16 +1,16 @@
 import React from "react";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
-// import "./SkillPlan.css";
 
 const CreateSkillPlanBox = () => {
   const snap = useSnapshot(state);
+  
   return (
     <div
-      className="my_post, skill-plan-box"
+      className="skill-plan-box"
       onClick={() => {
         state.createSkillPlanOpened = true;
-      }}      
+      }}
     >
       <div className="post_top">
         <img
@@ -22,6 +22,7 @@ const CreateSkillPlanBox = () => {
           type="text"
           placeholder={`Share your skill plan, ${snap.currentUser?.username}`}
           className="skill-input"
+          readOnly
         />
       </div>
     </div>

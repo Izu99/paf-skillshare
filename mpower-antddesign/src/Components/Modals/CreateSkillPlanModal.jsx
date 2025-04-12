@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Select, DatePicker, Checkbox } from "antd";
+import { Modal, Form, Input, Button, Select, DatePicker, Checkbox, message } from "antd";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
 import SkillPlanService from "../../Services/SkillPlanService";
@@ -17,21 +17,30 @@ const CreateSkillPlanModal = () => {
       setLoading(true);
       const values = await form.validateFields();
 
-      await SkillPlanService.createSkillPlan({
+      // Create the skill plan with explicit boolean conversion for isFinished
+      // Also include "finished" field to match backend expectations
+      const newSkillPlan = {
         skillDetails: values.skillDetails,
         skillLevel: values.skillLevel,
         resources: values.resources,
         userId: snap.currentUser?.uid,
         date: values.date.format("YYYY-MM-DD"),
-        isFinished: values.isFinished || false,
-      });
+        isFinished: Boolean(values.isFinished),
+        finished: Boolean(values.isFinished) // Add this field to ensure backend compatibility
+      };
 
-      state.skillPlans = await SkillPlanService.getAllSkillPlans();
-
+      await SkillPlanService.createSkillPlan(newSkillPlan);
+      
+      // Refresh the skill plans list
+      const refreshedPlans = await SkillPlanService.getAllSkillPlans();
+      state.skillPlans = refreshedPlans;
+      
+      message.success("Skill plan created successfully");
       form.resetFields();
       state.createSkillPlanOpened = false;
     } catch (error) {
       console.error("Error creating skill plan:", error);
+      message.error("Failed to create skill plan");
     } finally {
       setLoading(false);
     }
@@ -39,9 +48,11 @@ const CreateSkillPlanModal = () => {
 
   return (
     <Modal
+      title="Create New Skill Plan"
       open={snap.createSkillPlanOpened}
       footer={null}
       onCancel={() => {
+        form.resetFields();
         state.createSkillPlanOpened = false;
       }}
     >
@@ -51,26 +62,29 @@ const CreateSkillPlanModal = () => {
           label="Skill Details"
           rules={[{ required: true, message: "Please enter skill details" }]}
         >
-          <Input.TextArea />
+          <Input.TextArea placeholder="What skill do you want to develop?" />
         </Form.Item>
+        
         <Form.Item
           name="skillLevel"
           label="Skill Level"
           rules={[{ required: true, message: "Please select skill level" }]}
         >
-          <Select>
+          <Select placeholder="Select skill level">
             <Option value="beginner">Beginner</Option>
             <Option value="intermediate">Intermediate</Option>
             <Option value="advanced">Advanced</Option>
           </Select>
         </Form.Item>
+        
         <Form.Item
           name="resources"
           label="Resources"
           rules={[{ required: true, message: "Please provide resources" }]}
         >
-          <Input.TextArea />
+          <Input.TextArea placeholder="Books, courses, websites, etc." />
         </Form.Item>
+        
         <Form.Item
           name="date"
           label="Scheduled Date"
@@ -78,6 +92,7 @@ const CreateSkillPlanModal = () => {
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
+        
         <Form.Item
           name="isFinished"
           valuePropName="checked"
@@ -86,8 +101,9 @@ const CreateSkillPlanModal = () => {
         >
           <Checkbox />
         </Form.Item>
+        
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading}>
+          <Button type="primary" htmlType="submit" loading={loading} block>
             Create Skill Plan
           </Button>
         </Form.Item>

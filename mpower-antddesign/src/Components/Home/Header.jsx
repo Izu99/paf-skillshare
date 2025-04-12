@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import AuthModal from "../Modals/AuthModal";
+import AuthService from "../../Services/AuthService";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -9,10 +10,25 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in by checking localStorage
-    if (localStorage.getItem("userId")) {
-      setIsLoggedIn(true);
-    }
+    // Check if user is logged in
+    const checkLoginStatus = () => {
+      const isAuthenticated = AuthService.isAuthenticated();
+      setIsLoggedIn(isAuthenticated);
+    };
+
+    // Check on component mount
+    checkLoginStatus();
+
+    // Add event listener to detect localStorage changes
+    window.addEventListener('storage', checkLoginStatus);
+
+    // Also check every time the component is focused
+    window.addEventListener('focus', checkLoginStatus);
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener('focus', checkLoginStatus);
+    };
   }, []);
 
   const authButtonClicked = () => {
@@ -26,7 +42,7 @@ const Header = () => {
   const handleAuthSuccess = () => {
     setIsAuthModalOpened(false);
     setIsLoggedIn(true); // Set logged in state to true after successful login
-    // navigate("/community"); // Redirect to /community
+    navigate("/"); // Redirect to /community
   };
 
   return (
@@ -38,7 +54,7 @@ const Header = () => {
             <h1>UNLOCK YOUR POTENTIAL</h1>
             <h2>LEARN. SHARE. GROW.</h2>
             <p>
-              Join our community of learners and experts. Share your meals, 
+              Join our community of learners and experts. Share your skills and 
               learn from others, and build your professional network.
             </p>
             <div className="header__btn">
@@ -50,7 +66,7 @@ const Header = () => {
         </div>
       </div>
       
-      <AuthModal 
+      <AuthModal
         onClose={() => {
           setIsAuthModalOpened(false);
         }}

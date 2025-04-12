@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Card, Button, Row, Checkbox, DatePicker } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Card, Button, Checkbox, Tooltip } from "antd";
+import { EditOutlined, DeleteOutlined, CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
 import SkillPlanService from "../../Services/SkillPlanService";
@@ -9,8 +9,13 @@ import dayjs from 'dayjs';
 const SkillPlanCard = ({ plan }) => {
   const snap = useSnapshot(state);
   const [deleteLoading, setIsDeleteLoading] = useState(false);
-  const [isFinished, setIsFinished] = useState(plan.isFinished);
+  const [isFinished, setIsFinished] = useState(Boolean(plan.isFinished));
   const [updateLoading, setUpdateLoading] = useState(false);
+
+  // Update local state when plan prop changes
+  useEffect(() => {
+    setIsFinished(Boolean(plan.isFinished));
+  }, [plan.isFinished]);
 
   const deletePlan = async () => {
     try {
@@ -27,19 +32,32 @@ const SkillPlanCard = ({ plan }) => {
   const handleCheckboxChange = async (e) => {
     try {
       setUpdateLoading(true);
-      setIsFinished(e.target.checked);
+      const newStatus = e.target.checked;
+      
+      // Update local state immediately for better UX
+      setIsFinished(newStatus);
 
-      // Update only the isFinished status
-      await SkillPlanService.updateSkillPlan(plan.id, {
+      // Make a copy of the plan to avoid direct mutation
+      const updatedPlan = {
         ...plan,
-        isFinished: e.target.checked
-      });
+        isFinished: newStatus
+      };
 
-      // Refresh the plans
+      // Update the plan in the backend
+      await SkillPlanService.updateSkillPlan(plan.id, updatedPlan);
+
+      // Update the plan in global state
+      const updatedPlans = snap.skillPlans.map(p => 
+        p.id === plan.id ? { ...p, isFinished: newStatus } : p
+      );
+      state.skillPlans = updatedPlans;
+      
+      // Optional: Refresh from server to ensure consistency
       state.skillPlans = await SkillPlanService.getAllSkillPlans();
     } catch (error) {
       console.error("Error updating plan status:", error);
-      setIsFinished(plan.isFinished); // Revert on error
+      // Revert local state on error
+      setIsFinished(!e.target.checked);
     } finally {
       setUpdateLoading(false);
     }
@@ -47,49 +65,71 @@ const SkillPlanCard = ({ plan }) => {
 
   return (
     <Card
-      title={`Skill Plan: ${plan.skillDetails}`}
-      extra={
-        <Button
-          icon={<EditOutlined />}
-          onClick={() => {
-            state.selectedSkillPlanToUpdate = plan;
-            state.updateSkillPlanOpened = true;
-          }}
-          type="dashed"
-        >
-          Edit
-        </Button>
-      }
-      style={{
-        backgroundColor: isFinished ? 'red' : '#123456', // Change background color
-        borderColor: isFinished ? 'darkred' : 'default', // Dark red border if finished
-      }}
+      className={`skill-plan-card ${isFinished ? 'skill-plan-completed' : 'skill-plan-active'}`}
+      bordered={false}
     >
-      <Row>
-        <p>Skill Details: {plan.skillDetails}</p>
-        <p>Skill Level: {plan.skillLevel}</p>
-        <p>Resources: {plan.resources}</p>
-        <p>Scheduled Date: {dayjs(plan.date).format("YYYY-MM-DD")}</p>
-      </Row>
-
-      <Row>
-        Finished:
+      <div className="skill-plan-header">
         <Checkbox
           checked={isFinished}
           onChange={handleCheckboxChange}
-          loading={updateLoading}
+          disabled={updateLoading}
+          className="skill-plan-checkbox"
         />
-      </Row>
-
-      <Button
-        icon={<DeleteOutlined />}
-        onClick={deletePlan}
-        loading={deleteLoading}
-        type="danger"
-        style={{ marginTop: 10 }}
-      >
-        Delete
-      </Button>
+        <h3 className="skill-plan-title">{plan.skillDetails}</h3>
+        
+        <div className="skill-plan-action-buttons">
+          <Tooltip title="Edit task">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => {
+                state.selectedSkillPlanToUpdate = plan;
+                state.updateSkillPlanOpened = true;
+              }}
+              className="skill-plan-edit-btn"
+              type="text"
+            />
+          </Tooltip>
+          
+          <Tooltip title="Delete task">
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={deletePlan}
+              loading={deleteLoading}
+              className="skill-plan-delete-btn"
+              type="text"
+              danger
+            />
+          </Tooltip>
+        </div>
+      </div>
+      
+      <div className="skill-plan-body">
+        <div className="skill-plan-metadata">
+          <div className="skill-plan-tag">Level: {plan.skillLevel}</div>
+          <div className="skill-plan-date">
+            <ClockCircleOutlined /> {dayjs(plan.date).format("MMM D, YYYY")}
+          </div>
+        </div>
+        
+        {plan.resources && (
+          <div className="skill-plan-resources">
+            <div className="skill-plan-resources-label">Resources:</div>
+            <div className="skill-plan-resources-value">{plan.resources}</div>
+          </div>
+        )}
+      </div>
+      
+      <div className="skill-plan-status">
+        {isFinished ? (
+          <div className="skill-plan-completed-tag">
+            <CheckCircleOutlined /> Completed
+          </div>
+        ) : (
+          <div className="skill-plan-pending-tag">
+            <ClockCircleOutlined /> In Progress
+          </div>
+        )}
+      </div>
     </Card>
   );
 };

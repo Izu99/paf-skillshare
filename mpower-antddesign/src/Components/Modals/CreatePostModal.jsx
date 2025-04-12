@@ -92,7 +92,7 @@ const handleSubmit = async () => {
             </Upload>
           </Form.Item>
         )}
-        {fileType === "image" && <img src={image} width={100} height={400} />}
+        {fileType === "image" && <img src={image} width={400} height={400} />}
         {fileType === "video" && (
           <video
             controls

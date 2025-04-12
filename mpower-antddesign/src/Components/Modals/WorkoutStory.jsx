@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Input, Upload, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Modal, Button, Form, Input, Upload, message, Spin, Avatar } from "antd";
+import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
 import UploadFileService from "../../Services/UploadFileService";
@@ -17,12 +17,22 @@ const WorkoutStory = () => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState();
+  const [author, setAuthor] = useState(null);
+
   useEffect(() => {
     form.setFieldsValue({
       title: workoutStory?.title,
       description: workoutStory?.description,
     });
-  }, [workoutStory]);
+    
+    setUploadedImage(null);
+    
+    // Find the author of the workout story
+    if (snap.users && workoutStory?.userId) {
+      const storyAuthor = snap.users.find(user => user.id === workoutStory.userId);
+      setAuthor(storyAuthor);
+    }
+  }, [workoutStory, snap.users, form]);
 
   const [updatedStory, setUpdatedStory] = useState({
     title: workoutStory?.title || "",
@@ -39,10 +49,10 @@ const WorkoutStory = () => {
       );
       state.storyCards = await WorkoutStoryService.getAllWorkoutStories();
       state.workoutStoryOpen = false;
-      message.success("Successfully updated");
+      message.success("Story updated successfully");
       form.resetFields();
     } catch (error) {
-      message.success("Error while deleting story");
+      message.error("Error while updating story");
     } finally {
       setLoading(false);
     }
@@ -71,10 +81,10 @@ const WorkoutStory = () => {
       image: workoutStory?.image || "",
       description: workoutStory?.description || "",
     });
+    state.workoutStoryOpen = false;
   };
 
   const handleFileChange = async (info) => {
-    console.log(info);
     if (info.file) {
       setImageUploading(true);
       try {
@@ -88,65 +98,101 @@ const WorkoutStory = () => {
         setUploadedImage(uploadedImageUrl);
       } catch (error) {
         console.error("Error uploading image:", error);
+        message.error("Failed to upload image");
       } finally {
         setImageUploading(false);
       }
     }
   };
 
+  if (!workoutStory) {
+    return null;
+  }
+
   return (
     <Modal
-      title={workoutStory.title}
-      open={snap.workoutStoryOpen}
-      onCancel={() => {
-        state.workoutStoryOpen = false;
-      }}
-      footer={[
-        userId === workoutStory.userId && (
-          <div key="editingButtons">
-            <Button key="cancel" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              loading={loading}
-              style={{ marginRight: 8, marginLeft: 8 }}
-              key="submit"
-              type="primary"
-              onClick={handleUpdate}
-            >
-              Update
-            </Button>
-            <Button
-              loading={deleteLoading}
-              danger
-              key="delete"
-              type="dashed"
-              onClick={handleDelete}
-            >
-              Delete
-            </Button>
-          </div>
-        ),
-      ]}
-    >
-      {userId !== workoutStory.userId && (
-        <div>
-          <div style={{ maxHeight: 400 }}>
-            <img src={workoutStory?.image} height={300} alt="Workout Story" />
-          </div>
-          <p>{workoutStory?.description}</p>
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Avatar 
+            src={author?.image} 
+            icon={<UserOutlined />} 
+            size="small"
+          />
+          <span>{workoutStory.title}</span>
         </div>
-      )}
-      {userId === workoutStory.userId && (
-        <Form form={form} layout="vertical">
-          <div style={{ maxHeight: 400 }}>
-            <img
-              style={{ width: "100%", height: "100%", maxHeight: 400 }}
-              src={uploadedImage ? uploadedImage : workoutStory?.image}
-              alt="Workout Story"
+      }
+      open={snap.workoutStoryOpen}
+      onCancel={handleCancel}
+      footer={
+        userId === workoutStory.userId
+          ? [
+              <Button key="cancel" onClick={handleCancel}>
+                Cancel
+              </Button>,
+              <Button
+                loading={loading}
+                style={{ marginRight: 8, marginLeft: 8 }}
+                key="submit"
+                type="primary"
+                onClick={handleUpdate}
+              >
+                Update
+              </Button>,
+              <Button
+                loading={deleteLoading}
+                danger
+                key="delete"
+                type="primary"
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>,
+            ]
+          : [
+              <Button key="close" onClick={handleCancel}>
+                Close
+              </Button>
+            ]
+      }
+      bodyStyle={{ padding: "20px" }}
+      width={600}
+    >
+      {userId !== workoutStory.userId ? (
+        <div className="story-view-container">
+          <div className="story-image-wrapper">
+            <img 
+              src={workoutStory?.image} 
+              alt={workoutStory?.title} 
+              className="story-full-image" 
             />
           </div>
-          <Form.Item label="Title" name="title">
+          <div className="story-details">
+            <h3>{workoutStory?.title}</h3>
+            <p>{workoutStory?.description}</p>
+            {workoutStory.timestamp && (
+              <p className="story-timestamp">
+                {new Date(workoutStory.timestamp).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <Form form={form} layout="vertical">
+          <div className="story-image-editor">
+            {imageUploading ? (
+              <div className="image-uploading">
+                <Spin tip="Uploading..." />
+              </div>
+            ) : (
+              <img
+                className="edit-story-image"
+                src={uploadedImage || workoutStory?.image}
+                alt="Workout Story"
+              />
+            )}
+          </div>
+          
+          <Form.Item label="Title" name="title" rules={[{ required: true, message: 'Please enter a title' }]}>
             <Input
               value={updatedStory.title}
               onChange={(e) =>
@@ -154,21 +200,23 @@ const WorkoutStory = () => {
               }
             />
           </Form.Item>
-          {imageUploading ? (
-            <p>Please wait image uploading</p>
-          ) : (
-            <Form.Item label="Image" name="image">
-              <Upload
-                beforeUpload={() => false} // Prevent default upload behavior
-                onChange={handleFileChange}
-                showUploadList={false}
-              >
-                <Button icon={<UploadOutlined />}>Upload Image</Button>
-              </Upload>
-            </Form.Item>
-          )}
-          <Form.Item label="Description" name="description">
+          
+          <Form.Item label="Image" name="image">
+            <Upload
+              beforeUpload={() => false} // Prevent default upload behavior
+              onChange={handleFileChange}
+              showUploadList={false}
+              disabled={imageUploading}
+            >
+              <Button icon={<UploadOutlined />} disabled={imageUploading}>
+                {imageUploading ? "Uploading..." : "Change Image"}
+              </Button>
+            </Upload>
+          </Form.Item>
+          
+          <Form.Item label="Description" name="description" rules={[{ required: true, message: 'Please enter a description' }]}>
             <Input.TextArea
+              rows={4}
               value={updatedStory.description}
               onChange={(e) =>
                 setUpdatedStory({
