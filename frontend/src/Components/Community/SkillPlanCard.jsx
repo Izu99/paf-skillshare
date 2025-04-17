@@ -20,8 +20,12 @@ const SkillPlanCard = ({ plan }) => {
   const deletePlan = async () => {
     try {
       setIsDeleteLoading(true);
-      await SkillPlanService.deleteSkillPlan(plan.id);
-      state.skillPlans = await SkillPlanService.getAllSkillPlans();
+      
+      // Ensure user ID is passed for ownership verification
+      await SkillPlanService.deleteSkillPlan(plan.id, snap.currentUser.uid);
+      
+      // Refresh the skill plans list specifically for the current user
+      state.skillPlans = await SkillPlanService.getUserSkillPlans(snap.currentUser.uid);
     } catch (error) {
       console.error("Error deleting plan:", error);
     } finally {
@@ -40,7 +44,9 @@ const SkillPlanCard = ({ plan }) => {
       // Make a copy of the plan to avoid direct mutation
       const updatedPlan = {
         ...plan,
-        isFinished: newStatus
+        isFinished: newStatus,
+        finished: newStatus, // Include both fields for consistency
+        userId: snap.currentUser.uid // Include user ID for ownership verification
       };
 
       // Update the plan in the backend
@@ -48,12 +54,12 @@ const SkillPlanCard = ({ plan }) => {
 
       // Update the plan in global state
       const updatedPlans = snap.skillPlans.map(p => 
-        p.id === plan.id ? { ...p, isFinished: newStatus } : p
+        p.id === plan.id ? { ...p, isFinished: newStatus, finished: newStatus } : p
       );
       state.skillPlans = updatedPlans;
       
       // Optional: Refresh from server to ensure consistency
-      state.skillPlans = await SkillPlanService.getAllSkillPlans();
+      state.skillPlans = await SkillPlanService.getUserSkillPlans(snap.currentUser.uid);
     } catch (error) {
       console.error("Error updating plan status:", error);
       // Revert local state on error

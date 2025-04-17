@@ -2,16 +2,15 @@ import axios from "axios";
 import { BASE_URL } from "../constants";
 
 const SkillPlanService = {
-  async getAllSkillPlans() {
+  async getUserSkillPlans(userId) {
     try {
       const accessToken = localStorage.getItem("accessToken");
       const config = {
         headers: { Authorization: `Bearer ${accessToken}` },
       };
-      const response = await axios.get(`${BASE_URL}/skillPlans`, config);
+      const response = await axios.get(`${BASE_URL}/skillPlans/user/${userId}`, config);
       return response.data.map(plan => ({
         ...plan,
-        // Normalize the completion status regardless of field name returned
         isFinished: 
           plan.isFinished === true || 
           plan.isFinished === "true" ||
@@ -24,7 +23,7 @@ const SkillPlanService = {
           plan.finished === "true"
       }));
     } catch (error) {
-      console.error("Error getting skill plans:", error.response?.data || error.message);
+      console.error("Error fetching user skill plans:", error.response?.data || error.message);
       throw error;
     }
   },
@@ -79,7 +78,7 @@ const SkillPlanService = {
         finished: Boolean(skillPlan.isFinished)
       };
       
-      const response = await axios.put(`${BASE_URL}/skillPlans/${skillPlanId}`, planToSend, config);
+      const response = await axios.put(`${BASE_URL}/skillPlans/${skillPlanId}/${skillPlan.userId}`, planToSend, config);
       
       // Normalize the response to ensure consistency
       return {
@@ -101,19 +100,19 @@ const SkillPlanService = {
     }
   },
 
-  async deleteSkillPlan(skillPlanId) {
+  async deleteSkillPlan(skillPlanId, userId) {
     try {
       const accessToken = localStorage.getItem("accessToken");
       const config = {
         headers: { Authorization: `Bearer ${accessToken}` },
       };
-      await axios.delete(`${BASE_URL}/skillPlans/${skillPlanId}`, config);
+      await axios.delete(`${BASE_URL}/skillPlans/${skillPlanId}/${userId}`, config);  // Make sure userId is passed here
       return true;
     } catch (error) {
       console.error("Error deleting skill plan:", error);
       throw error;
     }
-  }
+  }  
 };
 
 export default SkillPlanService;

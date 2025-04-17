@@ -101,17 +101,18 @@ const UserProfileModal = () => {
     }
   };
 
-  // Check if form has been modified compared to initial values
   const hasFormChanged = () => {
     const currentValues = form.getFieldsValue();
     const initialValues = snap.currentUser;
-    
-    // Compare each field except the removed ones (biography and fitnessGoals)
+  
+    if (!initialValues) return false;
+  
     return (
       currentValues.profileVisibility !== initialValues.profileVisibility ||
       imageChanged
     );
   };
+  
 
   return (
     <Modal

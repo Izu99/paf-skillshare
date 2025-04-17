@@ -17,13 +17,19 @@ const CreateSkillPlanModal = () => {
       setLoading(true);
       const values = await form.validateFields();
 
+      // Ensure userId is available
+      if (!snap.currentUser?.uid) {
+        message.error("User not authenticated");
+        return;
+      }
+
       // Create the skill plan with explicit boolean conversion for isFinished
       // Also include "finished" field to match backend expectations
       const newSkillPlan = {
         skillDetails: values.skillDetails,
         skillLevel: values.skillLevel,
         resources: values.resources,
-        userId: snap.currentUser?.uid,
+        userId: snap.currentUser.uid,
         date: values.date.format("YYYY-MM-DD"),
         isFinished: Boolean(values.isFinished),
         finished: Boolean(values.isFinished) // Add this field to ensure backend compatibility
@@ -31,8 +37,8 @@ const CreateSkillPlanModal = () => {
 
       await SkillPlanService.createSkillPlan(newSkillPlan);
       
-      // Refresh the skill plans list
-      const refreshedPlans = await SkillPlanService.getAllSkillPlans();
+      // Refresh the skill plans list for the current user only
+      const refreshedPlans = await SkillPlanService.getUserSkillPlans(snap.currentUser.uid);
       state.skillPlans = refreshedPlans;
       
       message.success("Skill plan created successfully");
@@ -101,7 +107,7 @@ const CreateSkillPlanModal = () => {
         >
           <Checkbox />
         </Form.Item>
-        
+        Figure
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
             Create Skill Plan

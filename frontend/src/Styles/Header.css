@@ -1,8 +1,8 @@
 /* header.css */
 .header {
     min-height: 100vh;
-    background: linear-gradient(135deg, rgba(62, 142, 247, 0.9), rgba(94, 113, 228, 0.8)), 
-                url("");
+    background: linear-gradient(135deg, rgba(30, 58, 7, 0.123), rgba(7, 151, 62, 0.295)), 
+                url("https://th.bing.com/th/id/OIP.SWrd7Ya5nT1kBG6q4ry3_AHaE8?rs=1&pid=ImgDetMain");
     background-size: cover;
     background-position: center;
     position: relative;
@@ -103,7 +103,7 @@
   
   .btn__primary {
     background: #fff;
-    color: #3E8EF7;
+    color: #155cb9;
   }
   
   .btn__primary:hover {

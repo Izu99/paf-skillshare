@@ -5,7 +5,9 @@ import state from "../../Utils/Store";
 import UploadFileService from "../../Services/UploadFileService";
 import { UploadOutlined } from "@ant-design/icons";
 import PostService from "../../Services/PostService";
+
 const uploader = new UploadFileService();
+
 const CreatePostModal = () => {
   const snap = useSnapshot(state);
   const [form] = Form.useForm();
@@ -13,33 +15,50 @@ const CreatePostModal = () => {
   const [imageUploading, setImageUploading] = useState(false);
   const [fileType, setFileType] = useState("image");
   const [image, setImage] = useState("");
- // Modify this part in CreatePostModal
-const handleSubmit = async () => {
-  try {
-    setLoading(true);
-    const values = await form.validateFields();
 
-    const body = {
-      ...values,
-      mediaLink: image,
-      userId: snap.currentUser?.uid,
-      mediaType: fileType,
-    };
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      const values = await form.validateFields();
 
-    // Create the post
-    await PostService.createPost(body);
+      const body = {
+        ...values,
+        mediaLink: image,
+        userId: snap.currentUser?.uid,
+        mediaType: fileType,
+      };
 
-    // Fetch new posts, prepend the new post at the top
-    state.posts = [body, ...await PostService.getPosts()];
+      const tempId = `temp-${Date.now()}`;
+      const tempPost = {
+        ...body,
+        id: tempId,
+        createdAt: new Date().toISOString(),
+      };
 
-    message.success("Post created successfully");
-    state.createPostModalOpened = false;
-  } catch (error) {
-    console.error("Form validation failed:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+      state.posts = [tempPost, ...state.posts];
+
+      const newPost = await PostService.createPost(body);
+
+      state.posts = state.posts.map((post) =>
+        post.id === tempId ? newPost : post
+      );
+
+      message.success("Post created successfully");
+
+      // Reset form and state
+      form.resetFields();
+      setImage("");
+      setFileType("image");
+
+      state.createPostModalOpened = false;
+    } catch (error) {
+      state.posts = state.posts.filter((post) => !post.id.startsWith("temp-"));
+      console.error("Failed to create post:", error);
+      message.error("Failed to create post");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileChange = async (info) => {
     if (info.file) {
@@ -51,18 +70,20 @@ const handleSubmit = async () => {
         "posts"
       );
       setImage(url);
-    } else if (info.file.status === "removed") {
+      setImageUploading(false);
     }
-    setImageUploading(false);
   };
 
   return (
     <Modal
+      visible={state.createPostModalOpened}
       onCancel={() => {
+        form.resetFields();
+        setImage("");
+        setFileType("image");
         state.createPostModalOpened = false;
       }}
       footer={null}
-      visible={state.createPostModalOpened}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
@@ -74,7 +95,9 @@ const handleSubmit = async () => {
         >
           <Input.TextArea />
         </Form.Item>
-        {imageUploading && <p>Media is uploading please wait</p>}
+
+        {imageUploading && <p>Media is uploading, please wait...</p>}
+
         {!imageUploading && (
           <Form.Item
             name="mediaLink"
@@ -92,14 +115,19 @@ const handleSubmit = async () => {
             </Upload>
           </Form.Item>
         )}
-        {fileType === "image" && <img src={image} width={400} height={400} />}
-        {fileType === "video" && (
+
+        {fileType === "image" && image && (
+          <img src={image} width={400} height={400} alt="preview" />
+        )}
+
+        {fileType === "video" && image && (
           <video
             controls
             src={image}
             style={{ maxWidth: "100%", maxHeight: "400px" }}
           />
         )}
+
         {!imageUploading && (
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>

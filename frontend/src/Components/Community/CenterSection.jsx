@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Avatar } from "antd";
+import { Avatar, Empty, Spin, message } from "antd";
 import TobBox from "./TobBox";
 import { useSnapshot } from "valtio";
 import state from "../../Utils/Store";
@@ -17,42 +17,53 @@ import Notifications from "./Notifications";
 
 const CenterSection = () => {
   const snap = useSnapshot(state);
-  const [skillPlans, setSkillPlans] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch posts
+  // Load posts for the feed
   useEffect(() => {
     PostService.getPosts()
       .then((result) => {
-        state.posts = result;
+        // Create a map of post IDs to avoid duplicates
+        const uniquePosts = [];
+        const seenIds = new Set();
+        
+        result.forEach(post => {
+          if (!seenIds.has(post.id)) {
+            seenIds.add(post.id);
+            uniquePosts.push(post);
+          }
+        });
+        
+        state.posts = uniquePosts;
       })
       .catch((err) => {
         console.error("Failed to fetch posts:", err);
       });
   }, []);
-  
-  // Add this useEffect for skill plans
+
+  // Load user-specific skill plans when the skill plans tab is active or user changes
   useEffect(() => {
-    const fetchSkillPlans = async () => {
+    const loadUserSkillPlans = async () => {
+      // Only load skill plans if the skill plans tab is selected
+      if (snap.activeIndex !== 2 || !snap.currentUser?.uid) {
+        return;
+      }
+
       try {
-        const plans = await SkillPlanService.getAllSkillPlans();
-        setSkillPlans(plans);
+        setLoading(true);
+        // Use our updated method for user-specific skill plans
+        const userSkillPlans = await SkillPlanService.getUserSkillPlans(snap.currentUser.uid);
+        state.skillPlans = userSkillPlans;
       } catch (err) {
         console.error("Failed to fetch skill plans:", err);
+        message.error("Failed to load your skill plans");
+      } finally {
+        setLoading(false);
       }
     };
-    
-    fetchSkillPlans();
-    
-    const skillPlansObserver = () => {
-      setSkillPlans(snap.skillPlans);
-    };
-    
-    skillPlansObserver();
-    
-    return () => {
-      // Cleanup if needed
-    };
-  }, [snap.skillPlans]);
+
+    loadUserSkillPlans();
+  }, [snap.activeIndex, snap.currentUser?.uid]);
 
   return (
     <div className="center">
@@ -66,7 +77,8 @@ const CenterSection = () => {
           className="profile-avatar"
         />
       </div>
-      <TobBox />      
+      <TobBox />
+      
       <div className="content-container">
         {snap.activeIndex === 1 && (
           <div className="">
@@ -87,15 +99,23 @@ const CenterSection = () => {
           <div className="skill-container">
             <StateDebugger />
             <CreateSkillPlanBox />
-            <div className="plans-grid">
-              {skillPlans.length > 0 ? (
-                skillPlans.map((plan) => (
+            
+            {loading ? (
+              <div className="loading-container">
+                <Spin size="large" />
+              </div>
+            ) : snap.skillPlans?.length > 0 ? (
+              <div className="plans-grid">
+                {snap.skillPlans.map((plan) => (
                   <SkillPlanCard key={plan.id} plan={plan} />
-                ))
-              ) : (
-                <div>No skill plans found</div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <Empty 
+                description="You haven't created any skill plans yet" 
+                className="no-plans-message"
+              />
+            )}
           </div>
         )}
         

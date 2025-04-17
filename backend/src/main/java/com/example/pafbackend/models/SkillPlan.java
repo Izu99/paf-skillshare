@@ -11,11 +11,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class SkillPlan {
     @Id
     private String id;
-    private String userId;
-    private String skillDetails;  // Details about the skill
-    private String skillLevel; // Changed from difficultyLevel for consistency
-    private String resources; // Changed from toolsRequired for consistency
-    private String date; // Date when the skill plan is scheduled
-    private boolean isFinished; // Whether the skill plan is completed (checkbox)
-    // Removed mediaUrl
+
+    private String userId; // Owner of the skill plan
+    private String skillDetails;
+    private String skillLevel;
+    private String resources;
+    private String date;
+    private boolean isFinished;
 }

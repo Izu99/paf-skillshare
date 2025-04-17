@@ -36,10 +36,16 @@ const UpdateSkillPlanModal = () => {
     try {
       setUpdateSkillPlanLoading(true);
       
+      // Ensure userId is available
+      if (!snap.currentUser?.uid) {
+        message.error("User not authenticated");
+        return;
+      }
+      
       // Create the updated plan - explicitly set both fields to match backend expectations
       const updatedPlan = {
         ...values,
-        userId: snap.currentUser.uid,
+        userId: snap.currentUser.uid, // Include user ID for ownership verification
         date: values.date.format("YYYY-MM-DD"),
         isFinished: Boolean(values.isFinished),
         finished: Boolean(values.isFinished) // Add this field to ensure backend compatibility
@@ -63,7 +69,7 @@ const UpdateSkillPlanModal = () => {
       state.skillPlans = updatedPlans;
       
       // Refresh from server to ensure consistency
-      const refreshedPlans = await SkillPlanService.getAllSkillPlans();
+      const refreshedPlans = await SkillPlanService.getUserSkillPlans(snap.currentUser.uid);
       state.skillPlans = refreshedPlans;
       
       message.success("Skill plan updated successfully");

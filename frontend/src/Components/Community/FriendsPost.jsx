@@ -59,6 +59,13 @@ const FriendsPost = ({ post }) => {
     state.updatePostModalOpened = true;
   };
 
+  // Add this check near the top of the component
+useEffect(() => {
+  if (!post.id) {
+    console.warn("Post without ID detected:", post);
+  }
+}, [post]);
+
   const menu = (
     <Menu>
       <Menu.Item onClick={updatePost} key="edit" icon={<EditOutlined />}>
